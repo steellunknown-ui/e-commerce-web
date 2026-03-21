@@ -65,7 +65,7 @@ export default function WhyChooseUs() {
             onClick={() => setIsOpen(true)}
           >
             <img 
-              src="/src/assets/why-choose-us.png" 
+              src="/why-choose-us.png" 
               alt="Our crafts, rice, makhana, and brass collections" 
               className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
               onError={(e) => {
@@ -105,8 +105,7 @@ export default function WhyChooseUs() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              src="/src/assets/why-choose-us.png" 
-              alt="Full Preview of Collections" 
+              src="/why-choose-us.png"               alt="Full Preview of Collections" 
               className="max-w-full max-h-[90vh] rounded-xl shadow-2xl object-contain cursor-default"
               onClick={(e) => e.stopPropagation()} // Prevent closing wrapper trigger
               onError={(e) => {
