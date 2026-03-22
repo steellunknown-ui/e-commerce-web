@@ -45,7 +45,7 @@ export default function Auth({ mode = 'login' }) {
         });
         
         if (signUpError) throw signUpError;
-        alert("Registration Successful! Please check your email for verification.");
+        alert("Registration Successful!");
         setIsLogin(true); // Switch to login after signup
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
