@@ -50,6 +50,29 @@ export default function Products() {
     }
   };
 
+  const seedCategories = async () => {
+    if (!confirm("Are you sure you want to add default categories into your Database?")) return;
+    try {
+      const defaultCats = [
+        { slug: 'makhana', name: 'Makhana (Foxnuts)', description: 'Premium quality nutrient-dense nuts' },
+        { slug: 'basmati-rice', name: 'Basmati Rice', description: 'Long-grain premium aromatic rice' },
+        { slug: 'non-basmati-rice', name: 'Non Basmati Rice', description: 'Daily consumption staple non-basmati varieties' },
+        { slug: 'handicraft-products', name: 'Handcrafted Art', description: 'Curated traditional crafts of heritage' },
+        { slug: 'brass-products', name: 'Brass Products', description: 'Exquisite traditional brassware and antique artifacts' },
+        { slug: 'marble-products', name: 'Marble Products', description: 'Handcrafted marble decor and planters' },
+        { slug: 'wooden-products', name: 'Wooden Products', description: 'Artisanal wooden clocks and kitchenware' }
+      ];
+
+      const { error } = await supabase.from('categories').insert(defaultCats);
+      if (error) throw error;
+      
+      alert("Default Categories Seeded Successfully!");
+      fetchData(); // Reload list
+    } catch (err) {
+      alert("Seeding Error: " + err.message);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -146,9 +169,16 @@ export default function Products() {
           <h1 className="font-serif text-3xl font-bold text-foreground">Products</h1>
           <p className="text-foreground/60 text-sm">Manage items listed in your live catalogue.</p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Add Product
-        </Button>
+        <div className="flex items-center gap-3">
+          {categories.length === 0 && (
+            <Button onClick={seedCategories} className="bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2">
+              Setup Categories
+            </Button>
+          )}
+          <Button onClick={() => setIsAddModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2">
+            <Plus className="h-4 w-4" /> Add Product
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-muted/20 shadow-sm overflow-hidden">

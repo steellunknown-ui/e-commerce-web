@@ -72,7 +72,10 @@ export default function Enquiries() {
                 {enquiries.map((enq) => (
                   <tr key={enq.id} className="hover:bg-muted/5 transition-colors">
                     <td className="px-6 py-4 text-xs">
-                      {new Date(enq.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                      {enq.created_at 
+                        ? new Date(enq.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+                        : 'N/A'
+                      }
                     </td>
                     <td className="px-6 py-4 font-medium text-foreground">{enq.name}</td>
                     <td className="px-6 py-4 text-foreground/70">
