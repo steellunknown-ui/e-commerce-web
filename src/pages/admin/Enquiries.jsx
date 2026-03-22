@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
 
 export default function Enquiries() {
   const [enquiries, setEnquiries] = useState([]);

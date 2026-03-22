@@ -15,8 +15,23 @@ export default function ProductCarousel() {
     useEffect(() => {
         const fetchCarouselProducts = async () => {
              try {
-                 const { data } = await supabase.from('products').select('*').limit(8);
-                 setProductsList(data || []);
+                 const { data } = await supabase.from('products').select('*, categories(name, slug)');
+                 
+                 const sortedData = (data || []).sort((a, b) => {
+                     const catA = a.categories?.slug || '';
+                     const catB = b.categories?.slug || '';
+                     const priority = ['makhana', 'basmati-rice', 'non-basmati-rice'];
+                     const indexA = priority.indexOf(catA);
+                     const indexB = priority.indexOf(catB);
+                     
+                     if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                     if (indexA !== -1) return -1;
+                     if (indexB !== -1) return 1;
+                     
+                     return catA.localeCompare(catB);
+                 });
+
+                 setProductsList(sortedData);
              } catch (err) {
                  console.error(err);
              } finally {
@@ -27,7 +42,7 @@ export default function ProductCarousel() {
     }, []);
 
     useEffect(() => {
-        if (isHovered || loading || carouselProducts.length === 0) return;
+        if (isHovered || loading || productsList.length === 0) return;
 
         let animationFrameId;
         const speed = 0.8; // Butter smooth continuous speed
@@ -47,7 +62,7 @@ export default function ProductCarousel() {
 
         animationFrameId = requestAnimationFrame(scrollTick);
         return () => cancelAnimationFrame(animationFrameId);
-    }, [isHovered]);
+    }, [isHovered, loading, productsList]);
 
     const handleNext = () => {
         if (scrollContainerRef.current) {
