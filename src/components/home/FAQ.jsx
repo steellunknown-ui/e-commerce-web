@@ -33,7 +33,7 @@ export default function FAQ() {
   };
 
   return (
-    <section className="py-20 bg-background">
+    <section id="faq" className="py-20 bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 space-y-4">
           <span className="text-primary font-semibold text-sm tracking-wider uppercase">Got Questions?</span>

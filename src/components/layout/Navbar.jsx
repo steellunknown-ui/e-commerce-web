@@ -56,6 +56,8 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className={`font-medium transition-colors ${isScrolled ? "text-foreground/80 hover:text-primary" : "text-white hover:text-white/80"}`}>Home</Link>
+            <a href="/#about" className={`font-medium transition-colors ${isScrolled ? "text-foreground/80 hover:text-primary" : "text-white hover:text-white/80"}`}>About</a>
+            <a href="/#faq" className={`font-medium transition-colors ${isScrolled ? "text-foreground/80 hover:text-primary" : "text-white hover:text-white/80"}`}>FAQ</a>
             <Link to="/products" className={`font-medium transition-colors ${isScrolled ? "text-foreground/80 hover:text-primary" : "text-white hover:text-white/80"}`}>Catalogue</Link>
             <Link to="/contact" className={`font-medium transition-colors ${isScrolled ? "text-foreground/80 hover:text-primary" : "text-white hover:text-white/80"}`}>Contact</Link>
           </div>
@@ -141,6 +143,8 @@ export default function Navbar() {
           <div className="md:hidden mt-4 bg-background/95 backdrop-blur-md rounded-lg shadow-lg border border-muted/20 p-4 absolute top-full left-4 right-4 animate-in fade-in-20 duration-200">
             <div className="flex flex-col space-y-4">
               <Link to="/" className="font-medium text-foreground/80 hover:text-primary" onClick={() => setIsMenuOpen(false)}>Home</Link>
+              <a href="/#about" className="font-medium text-foreground/80 hover:text-primary" onClick={() => setIsMenuOpen(false)}>About</a>
+              <a href="/#faq" className="font-medium text-foreground/80 hover:text-primary" onClick={() => setIsMenuOpen(false)}>FAQ</a>
               <Link to="/products" className="font-medium text-foreground/80 hover:text-primary" onClick={() => setIsMenuOpen(false)}>Catalogue</Link>
               <Link to="/contact" className="font-medium text-foreground/80 hover:text-primary" onClick={() => setIsMenuOpen(false)}>Contact</Link>
               <Button className="bg-secondary hover:bg-secondary/90 text-white w-full">

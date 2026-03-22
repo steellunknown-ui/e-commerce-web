@@ -25,7 +25,7 @@ export default function AboutUs() {
   ];
 
   return (
-    <section className="py-20 bg-muted/20 relative overflow-hidden">
+    <section id="about" className="py-20 bg-muted/20 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <span className="text-primary font-semibold text-sm tracking-wider uppercase">Behind The Brand</span>
