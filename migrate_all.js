@@ -14,13 +14,77 @@ envFile.split(/\r?\n/).forEach(line => {
 
 const supabase = createClient(envVars.VITE_SUPABASE_URL, envVars.VITE_SUPABASE_ANON_KEY);
 
-async function migrate() {
-  console.log("🚀 Starting Full Catalogue Migration...");
+// 🛑 EXACT CATEGORY DEFINITIONS — User wants ONLY these 7 categories
+const DESIRED_CATEGORIES = [
+  { slug: 'makhana', name: 'Makhana', description: 'Premium quality, nutrient-dense popped gorgon nuts sourced from organic farms.' },
+  { slug: 'basmati-rice', name: 'Rice', description: 'Long-grain premium rice with rich aroma and soft texture.' },
+  { slug: 'non-basmati-rice', name: 'Non-basmati', description: 'Premium daily consumption non-basmati rice varieties sourced fresh.' },
+  { slug: 'brass-products', name: 'Brass Products', description: 'Exquisite traditional brassware and antique artifacts crafted for timeless elegance.' },
+  { slug: 'marble-products', name: 'Marbles Products', description: 'Beautifully crafted marble products with premium finish and traditional designs.' },
+  { slug: 'wooden-products', name: 'Wooden Products', description: 'Handmade wooden items crafted with precision from premium quality natural wood.' },
+  { slug: 'handicraft-products', name: 'HandCrafted Products', description: 'Curated traditional crafts that tell a story of heritage and skill.' },
+];
 
-  // 2️⃣ Read and Parse mockData.js
+// MockData category_id → DB slug mapping
+const CATEGORY_SLUG_MAP = {
+  'makhana': 'makhana',
+  'rice': 'basmati-rice',
+  'non-basmati-rice': 'non-basmati-rice',
+  'handicraft': 'handicraft-products',
+  'brass-products': 'brass-products',
+  'marble-products': 'marble-products',
+  'wooden-products': 'wooden-products'
+};
+
+async function migrate() {
+  console.log("🚀 Starting Full Catalogue Migration...\n");
+
+  // ═══════════════════════════════════════════════════════
+  // STEP 1: Ensure ALL desired categories exist
+  // ═══════════════════════════════════════════════════════
+  console.log("📂 STEP 1: Setting up categories...");
+
+  // First delete ALL existing categories (clean slate)
+  const { data: existingCats } = await supabase.from('categories').select('*');
+  
+  // Nullify category_id on all products first to avoid FK violations
+  await supabase.from('products').update({ category_id: null }).neq('slug', 'IMPOSSIBLE_SLUG');
+  console.log("   🔄 Cleared all product-category links temporarily");
+
+  // Delete all existing categories
+  for (const cat of (existingCats || [])) {
+    await supabase.from('categories').delete().eq('id', cat.id);
+    console.log(`   🗑️ Deleted old category: "${cat.name}" (${cat.slug})`);
+  }
+
+  // Insert fresh categories
+  for (const cat of DESIRED_CATEGORIES) {
+    const { error } = await supabase.from('categories').insert({
+      slug: cat.slug,
+      name: cat.name,
+      description: cat.description,
+      image_url: ''
+    });
+    if (error) {
+      console.log(`   ❌ Failed to create "${cat.name}": ${error.message}`);
+    } else {
+      console.log(`   ✅ Created category: "${cat.name}" (${cat.slug})`);
+    }
+  }
+
+  // Build catMap from fresh data
+  const { data: freshCats } = await supabase.from('categories').select('id, slug');
+  const catMap = {};
+  freshCats?.forEach(c => catMap[c.slug] = c.id);
+  console.log(`\n   📋 Final Categories (${Object.keys(catMap).length}): ${Object.keys(catMap).join(', ')}\n`);
+
+  // ═══════════════════════════════════════════════════════
+  // STEP 2: Parse mockData.js
+  // ═══════════════════════════════════════════════════════
+  console.log("📖 STEP 2: Parsing mockData.js...");
+
   const fileContent = fs.readFileSync('src/data/mockData.js', 'utf-8');
 
-  // Map Imports: e.g., makhanaBulk -> 'src/assets/products/makhana/organic_bulk.png'
   const importMap = {};
   const importRegex = /import\s+(\w+)\s+from\s+['"]@\/assets\/(.+)['"]/g;
   let match;
@@ -28,135 +92,71 @@ async function migrate() {
     importMap[match[1]] = `src/assets/${match[2]}`;
   }
 
-  // Strip imports
   let cleanedContent = fileContent.replace(/import\s+.+;\s*/g, '');
-  
-  // ⚡ Strip "export" keywords to prevent Function() SyntaxErrors
   cleanedContent = cleanedContent.replace(/export\s+const/g, 'const');
 
-  // Replace image variables with string paths
   Object.keys(importMap).forEach(v => {
-    // Replace standalone variable references: thumbnail_url: makhanaBulk => thumbnail_url: 'src/assets/...'
     const regex = new RegExp(`:\\s*${v}\\b`, 'g');
     cleanedContent = cleanedContent.replace(regex, `: '${importMap[v]}'`);
   });
 
-  // Evaluate the strings into actual arrays
   const tempMod = {};
   const evalFunc = new Function('module', `${cleanedContent}; module.categories = categories; module.products = products;`);
   evalFunc(tempMod);
 
-  const categories = tempMod.categories;
   const products = tempMod.products;
+  console.log(`   Found ${products.length} products to process.\n`);
 
-  console.log(`Found ${categories.length} Categories and ${products.length} Products to migrate.`);
+  // ═══════════════════════════════════════════════════════
+  // STEP 3: Upload Images & Update Every Product
+  // ═══════════════════════════════════════════════════════
+  console.log("🖼️ STEP 3: Uploading images & updating products...\n");
 
-  // 3️⃣ Fetch Existing Categories (Skip inserting to avoid RLS Update issues)
-  const { data: insertedCats, error: catError } = await supabase
-    .from('categories')
-    .select('id, slug');
-
-  if (catError) {
-    console.error("Categories Fetch Error:", catError.message);
-    return;
-  }
-
-  const catMap = {};
-  insertedCats.forEach(c => catMap[c.slug] = c.id);
-  console.log(`✅ Loaded ${insertedCats.length} Categories from Database!`);
-
-  // 3️⃣.5 Fetch Existing Products to avoid Slug Duplicate Collisions Rollbacks
-  const { data: existingProds } = await supabase.from('products').select('slug');
-  const existingSlugs = new Set(existingProds ? existingProds.map(p => p.slug) : []);
-  console.log(`${existingSlugs.size} existing products cached to prevent collisions.`);
-
-  // 4️⃣ Upload Images and Insert Products
-  const productsToInsert = [];
+  let successCount = 0;
+  let failCount = 0;
 
   for (const p of products) {
-    let imageUrl = '';
     const localImagePath = p.thumbnail_url;
+    let imageUrl = '';
 
+    // Upload image to Supabase Storage
     if (localImagePath && localImagePath.startsWith('src/assets/')) {
       try {
-        const fileExt = path.extname(localImagePath).replace('.', '');
-        const fileName = `${Date.now()}_${path.basename(localImagePath)}`;
-        const buffer = fs.readFileSync(localImagePath);
+        if (fs.existsSync(localImagePath)) {
+          const fileExt = path.extname(localImagePath).replace('.', '');
+          const fileName = `${p.slug}.${fileExt}`;
+          const buffer = fs.readFileSync(localImagePath);
 
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, buffer, { contentType: `image/${fileExt}` });
+          const { error: uploadError } = await supabase.storage
+            .from('product-images')
+            .upload(fileName, buffer, { 
+              contentType: `image/${fileExt}`,
+              upsert: true
+            });
 
-        if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage
             .from('product-images')
             .getPublicUrl(fileName);
           imageUrl = publicUrl;
-          console.log(`📸 Uploaded image for ${p.name}`);
-          
-          if (existingSlugs.has(p.slug)) {
-            console.log(`🔄 Updating Image for Existing Product: ${p.slug}`);
-            const { error: updError } = await supabase.from('products').update({ thumbnail_url: imageUrl }).eq('slug', p.slug);
-            if (updError) {
-              console.error(`❌ Update Failed for ${p.slug}:`, updError.message);
-            } else {
-              console.log(`✅ Image Updated for ${p.slug}`);
-            }
-            continue; // Skip inserting it as a new row
+
+          if (uploadError) {
+            console.log(`   ⚠️ Upload note for ${p.slug}: ${uploadError.message} (using existing)`);
           }
         } else {
-          console.warn(`⚠️ Failed to upload image ${localImagePath}:`, uploadError.message);
+          console.log(`   ⚠️ File not found: ${localImagePath}`);
         }
       } catch (err) {
-        console.warn(`⚠️ FS Read Error for ${localImagePath}`);
+        console.log(`   ⚠️ Read error for ${localImagePath}: ${err.message}`);
       }
     }
 
-    if (existingSlugs.has(p.slug)) {
-      continue; // Duplicate but no new image uploaded, safe to skip
-    }
+    // Resolve category
+    const targetSlug = CATEGORY_SLUG_MAP[p.category_id] || p.category_id;
+    const resolvedCategoryId = catMap[targetSlug] || null;
 
-    if (localImagePath && localImagePath.startsWith('src/assets/')) {
-      try {
-        const fileExt = path.extname(localImagePath).replace('.', '');
-        const fileName = `${Date.now()}_${path.basename(localImagePath)}`;
-        const buffer = fs.readFileSync(localImagePath);
-
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, buffer, { contentType: `image/${fileExt}` });
-
-        if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('product-images')
-            .getPublicUrl(fileName);
-          imageUrl = publicUrl;
-        } else {
-          console.warn(`⚠️ Failed to upload image ${localImagePath}:`, uploadError.message);
-        }
-      } catch (err) {
-        console.warn(`⚠️ FS Read Error for ${localImagePath}`);
-      }
-    }
-
-    // 🛑 SLUG DICTIONARY FIX
-    // 'mockData.js' used ID strings differently than DB Slugs, we must map them exactly.
-    const slugMap = {
-      'makhana': 'makhana',
-      'rice': 'basmati-rice',
-      'non-basmati-rice': 'non-basmati-rice',
-      'handicraft': 'handicraft-products',
-      'brass-products': 'brass-products',
-      'marble-products': 'marble-products',
-      'wooden-products': 'wooden-products'
-    };
-
-    const targetCategorySlug = slugMap[p.category_id] || p.category_id;
-    const resolvedCategoryId = catMap[targetCategorySlug] || null;
-
-    productsToInsert.push({
+    // Build update payload
+    const updatePayload = {
       name: p.name,
-      slug: p.slug,
       short_description: p.short_description,
       full_description: p.full_description,
       price: p.price,
@@ -164,20 +164,56 @@ async function migrate() {
       material: p.material,
       origin: p.origin,
       category_id: resolvedCategoryId,
-      thumbnail_url: imageUrl || 'https://images.unsplash.com/photo-1541216970279-affbfdd55aa8',
       is_active: true
-    });
+    };
+
+    if (imageUrl && imageUrl.includes('product-images')) {
+      updatePayload.thumbnail_url = imageUrl;
+    }
+
+    // Update existing product
+    const { error: updError } = await supabase
+      .from('products')
+      .update(updatePayload)
+      .eq('slug', p.slug);
+
+    if (updError) {
+      console.log(`   ❌ ${p.slug}: ${updError.message}`);
+      failCount++;
+    } else {
+      const imgStatus = imageUrl ? '🖼️' : '⚠️no-img';
+      const catStatus = resolvedCategoryId ? '📁' : '⚠️no-cat';
+      console.log(`   ✅ ${p.slug} ${imgStatus} ${catStatus}`);
+      successCount++;
+    }
   }
 
-  const { error: prodError } = await supabase
-    .from('products')
-    .upsert(productsToInsert, { onConflict: 'slug' });
-
-  if (prodError) {
-    console.error("❌ Products Migration Error:", prodError.message);
-  } else {
-    console.log(`✅ ${productsToInsert.length} Products Synced Successfully with Full Mappings!`);
+  // ═══════════════════════════════════════════════════════
+  // STEP 4: Update category images using first product image
+  // ═══════════════════════════════════════════════════════
+  console.log("\n🖼️ STEP 4: Setting category cover images...");
+  
+  for (const cat of DESIRED_CATEGORIES) {
+    const catId = catMap[cat.slug];
+    if (!catId) continue;
+    
+    const { data: firstProduct } = await supabase
+      .from('products')
+      .select('thumbnail_url')
+      .eq('category_id', catId)
+      .limit(1)
+      .single();
+    
+    if (firstProduct?.thumbnail_url) {
+      await supabase.from('categories').update({ image_url: firstProduct.thumbnail_url }).eq('id', catId);
+      console.log(`   ✅ ${cat.name} cover image set`);
+    }
   }
+
+  console.log(`\n═══════════════════════════════════════`);
+  console.log(`✅ ${successCount} products updated successfully`);
+  console.log(`❌ ${failCount} products failed`);
+  console.log(`═══════════════════════════════════════\n`);
 }
 
 migrate();
