@@ -6,6 +6,13 @@ import ProductDetails from './pages/ProductDetails';
 import Auth from './pages/Auth';
 import Contact from './pages/Contact';
 
+// 👑 Admin Imports
+import ProtectedRoute from './components/admin/ProtectedRoute';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminProducts from './pages/admin/Products';
+import AdminEnquiries from './pages/admin/Enquiries';
+
 function App() {
   return (
     <Router>
@@ -17,6 +24,15 @@ function App() {
           <Route path="login" element={<Auth mode="login" />} />
           <Route path="register" element={<Auth mode="register" />} />
           <Route path="contact" element={<Contact />} />
+        </Route>
+
+        {/* 🔐 Admin Routes */}
+        <Route path="/admin" element={<ProtectedRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="enquiries" element={<AdminEnquiries />} />
+          </Route>
         </Route>
       </Routes>
     </Router>

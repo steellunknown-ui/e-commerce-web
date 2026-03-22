@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { products } from '@/data/mockData';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, ArrowLeft, CheckCircle2, ShieldAlert } from 'lucide-react';
@@ -8,8 +8,39 @@ import EnquiryModal from '@/components/products/EnquiryModal';
 
 export default function ProductDetails() {
   const { slug } = useParams();
-  const product = products.find((p) => p.slug === slug);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const { data } = await supabase
+          .from('products')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+          
+        setProduct(data);
+      } catch (err) {
+        console.error("Fetch Product Details Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/5">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-3 text-foreground/70">Loading Specifications...</span>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

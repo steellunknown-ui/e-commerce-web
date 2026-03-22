@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { products } from '@/data/mockData';
+import { supabase } from '@/lib/supabase';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ProductCarousel() {
-    const [productsList] = useState(products);
+    const [productsList, setProductsList] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
     const scrollContainerRef = useRef(null);
 
@@ -12,7 +13,21 @@ export default function ProductCarousel() {
     const carouselProducts = [...productsList, ...productsList];
 
     useEffect(() => {
-        if (isHovered) return;
+        const fetchCarouselProducts = async () => {
+             try {
+                 const { data } = await supabase.from('products').select('*').limit(8);
+                 setProductsList(data || []);
+             } catch (err) {
+                 console.error(err);
+             } finally {
+                 setLoading(false);
+             }
+        };
+        fetchCarouselProducts();
+    }, []);
+
+    useEffect(() => {
+        if (isHovered || loading || carouselProducts.length === 0) return;
 
         let animationFrameId;
         const speed = 0.8; // Butter smooth continuous speed

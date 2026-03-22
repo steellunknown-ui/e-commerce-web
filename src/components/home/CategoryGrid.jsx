@@ -5,13 +5,15 @@ import { categories } from '@/data/mockData';
 import { supabase } from '@/lib/supabase';
 
 export default function CategoryGrid() {
-  const [categoriesList] = useState(categories); // Fallback to mock initially
+  const [categoriesList, setCategoriesList] = useState(categories); 
 
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const { data, error } = await supabase.from('categories').select('*');
-        console.log("Supabase Categories Response:", { data, error });
+        const { data } = await supabase.from('categories').select('*');
+        if (data && data.length > 0) {
+          setCategoriesList(data);
+        }
       } catch (err) {
         console.log("Supabase fetch fallback activated", err);
       }

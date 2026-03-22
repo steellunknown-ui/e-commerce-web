@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { products, categories } from '@/data/mockData';
+import { supabase } from '@/lib/supabase';
 import ProductCard from '@/components/products/ProductCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,32 @@ export default function Products() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // 🔄 Supabase Data States
+  const [productsList, setProductsList] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data: prods } = await supabase.from('products').select('*').eq('is_active', true);
+        const { data: cats } = await supabase.from('categories').select('*');
+        setProductsList(prods || []);
+        setCategoriesList(cats || []);
+      } catch (err) {
+        console.error("Fetch Live Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="text-center py-20">Loading Catalogue...</div>;
+
   // Filter Logic
-  const filteredProducts = products.filter((product) => {
-    const activeCategory = categories.find(c => c.slug === categoryFilter);
+  const filteredProducts = productsList.filter((product) => {
+    const activeCategory = categoriesList.find(c => c.slug === categoryFilter);
     const matchesCategory = categoryFilter === 'all' || (activeCategory && product.category_id === activeCategory.id);
     
     const matchesSearch = (product.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
@@ -29,7 +52,7 @@ export default function Products() {
       searchParams.set('category', slug);
     }
     setSearchParams(searchParams);
-    setIsSidebarOpen(false); // Close sidebar on mobile
+    setIsSidebarOpen(false); 
   };
 
   return (
@@ -86,7 +109,7 @@ export default function Products() {
                 >
                   All Products
                 </Button>
-                {categories.map((cat) => (
+                {categoriesList.map((cat) => (
                   <Button 
                     key={cat.id}
                     variant={categoryFilter === cat.slug ? 'default' : 'ghost'} 
