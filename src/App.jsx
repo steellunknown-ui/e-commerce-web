@@ -12,6 +12,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
 import AdminEnquiries from './pages/admin/Enquiries';
+import AdminLogin from './pages/admin/Login';
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
         </Route>
 
         {/* 🔐 Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
         <Route path="/admin" element={<ProtectedRoute />}>
           <Route element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
