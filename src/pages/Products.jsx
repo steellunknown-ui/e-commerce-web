@@ -109,16 +109,27 @@ export default function Products() {
                 >
                   All Products
                 </Button>
-                {categoriesList.map((cat) => (
-                  <Button 
-                    key={cat.id}
-                    variant={categoryFilter === cat.slug ? 'default' : 'ghost'} 
-                    className={`w-full justify-start font-medium text-sm ${categoryFilter === cat.slug ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}
-                    onClick={() => handleCategoryChange(cat.slug)}
-                  >
-                    {cat.name}
-                  </Button>
-                ))}
+                {categoriesList.map((cat) => {
+                  const displayNames = {
+                    'makhana': 'Makhana',
+                    'basmati-rice': 'Rice',
+                    'non-basmati-rice': 'Non-basmati',
+                    'handicraft-products': 'HandCrafted Products',
+                    'brass-products': 'Brass Products',
+                    'marble-products': 'Marbles Products',
+                    'wooden-products': 'Wooden Products'
+                  };
+                  return (
+                    <Button 
+                      key={cat.id}
+                      variant={categoryFilter === cat.slug ? 'default' : 'ghost'} 
+                      className={`w-full justify-start font-medium text-sm ${categoryFilter === cat.slug ? 'bg-primary text-white' : 'hover:bg-primary/10'}`}
+                      onClick={() => handleCategoryChange(cat.slug)}
+                    >
+                      {displayNames[cat.slug] || cat.name}
+                    </Button>
+                  );
+                })}
                 </div>
               </div>
             </div>
