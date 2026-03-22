@@ -37,22 +37,26 @@ export default function EnquiryModal({ isOpen, onClose, product }) {
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
       if (serviceId && templateId && publicKey) {
-        await emailjs.send(serviceId, templateId, {
-          from_name: data.name,
-          from_email: data.email,
-          phone: data.phone,
-          location: data.location,
-          product: product ? product.name : "Bulk Enquiry",
-          quantity: data.quantity,
-          message: data.message
-        }, publicKey);
+        try {
+          await emailjs.send(serviceId, templateId, {
+            from_name: data.name,
+            from_email: data.email,
+            phone: data.phone,
+            location: data.location,
+            product: product ? product.name : "Bulk Enquiry",
+            quantity: data.quantity,
+            message: data.message
+          }, publicKey);
+        } catch (emailErr) {
+          console.warn("Email notification failed to send:", emailErr);
+        }
       }
 
       alert("Enquiry Submitted Successfully!");
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Failed to submit enquiry. Please try again.");
+      alert("Failed to submit enquiry: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -122,8 +126,8 @@ export default function EnquiryModal({ isOpen, onClose, product }) {
               <Button type="button" variant="ghost" onClick={onClose} className="border border-muted/30 flex-1">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90 text-white flex-1">
-                Submit Enquiry
+              <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90 text-white flex-1">
+                {loading ? 'Submitting...' : 'Submit Enquiry'}
               </Button>
             </div>
           </DialogFooter>
