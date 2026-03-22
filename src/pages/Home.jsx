@@ -3,6 +3,8 @@ import ProductCarousel from '@/components/home/ProductCarousel';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import AboutUs from '@/components/home/AboutUs';
 import WhyChooseUs from '@/components/home/WhyChooseUs';
+import Testimonials from '@/components/home/Testimonials';
+import FAQ from '@/components/home/FAQ';
 import BulkEnquiryCTA from '@/components/home/BulkEnquiryCTA';
 
 export default function Home() {
@@ -13,6 +15,8 @@ export default function Home() {
       <CategoryGrid />
       <AboutUs />
       <WhyChooseUs />
+      <Testimonials />
+      <FAQ />
       <BulkEnquiryCTA />
     </div>
   );
