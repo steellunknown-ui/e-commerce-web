@@ -73,6 +73,59 @@ export default function Products() {
     }
   };
 
+  const seedProducts = async () => {
+    if (!confirm("Are you sure you want to add mock products to populate your live website?")) return;
+    try {
+      const mockProducts = [
+        {
+          name: 'Organic Popped Makhana (Bulk)',
+          slug: 'organic-popped-makhana-bulk',
+          short_description: 'Raw, slow-dried popcorn-alternative sizing perfectly graded for global distribution.',
+          full_description: 'Sourced from the wetlands of Bihar, our makhana are harvested and popped according to ancient methods.',
+          price: 499,
+          moq: '50 Kg',
+          material: '100% Foxnut',
+          origin: 'Bihar, India',
+          thumbnail_url: 'https://images.unsplash.com/photo-1626200419199-391ae4be7e41?auto=format&fit=crop&w=800&q=80',
+          is_active: true
+        },
+        {
+          name: '1121 Basmati Rice',
+          slug: '1121-basmati-rice',
+          short_description: 'Exceptionally long with distinct Translucent pearl detail.',
+          full_description: 'Highly premium long-grain Basmati Rice perfect for royal rice dishes.',
+          price: 349,
+          moq: '20 Ton',
+          material: 'Basmati',
+          origin: 'Himalayas',
+          thumbnail_url: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80',
+          is_active: true
+        },
+        {
+          name: 'Traditional Unglazed Clay Kadai',
+          slug: 'traditional-clay-kadai',
+          short_description: 'Thick bottom slow-cooking curved pan safe for gas stoves.',
+          full_description: 'Solid red clay depth pan supported for high hospitality food preparation.',
+          price: 1099,
+          moq: '15 Units',
+          material: 'Natural Red Clay',
+          origin: 'Uttar Pradesh, India',
+          thumbnail_url: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80',
+          is_active: true
+        }
+      ];
+
+      // Insert products with fallback category logic or let them update it later
+      const { error } = await supabase.from('products').insert(mockProducts);
+      if (error) throw error;
+
+      alert("Mock Products Seeded Successfully!");
+      fetchData();
+    } catch (err) {
+      alert("Products Seeding Error: " + err.message);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -173,6 +226,11 @@ export default function Products() {
           {categories.length === 0 && (
             <Button onClick={seedCategories} className="bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2">
               Setup Categories
+            </Button>
+          )}
+          {products.length === 0 && (
+            <Button onClick={seedProducts} className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
+              Setup Products
             </Button>
           )}
           <Button onClick={() => setIsAddModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2">
