@@ -25,7 +25,7 @@ export default function ProductCard({ product }) {
       {/* Content */}
       <div className="p-5 flex-grow flex flex-col">
         <div className="flex-grow space-y-1">
-          <span className="text-xs text-primary font-semibold tracking-wider uppercase">{product.category_id}</span>
+          {/* Category label removed — category_id is a UUID, not a display name */}
           <h3 className="font-serif text-lg font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
             {product.name}
           </h3>
