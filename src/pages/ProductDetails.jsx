@@ -23,8 +23,9 @@ export default function ProductDetails() {
   }
 
   const handleWhatsappEnquiry = () => {
+    const number = import.meta.env.VITE_WHATSAPP_NUMBER || "918976461365";
     const message = `Hi, I am interested in your product: ${product.name}. MOQ is ${product.moq}. Can you share more details and pricing?`;
-    const whatsappUrl = `https://wa.me/919876543210?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 

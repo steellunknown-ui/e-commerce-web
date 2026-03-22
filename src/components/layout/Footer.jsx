@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import EnquiryModal from '../products/EnquiryModal';
 
 export default function Footer() {
+  const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   return (
     <footer className="bg-[#2f2f2f] text-white/90">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -17,6 +20,12 @@ export default function Footer() {
               <a href="#" className="hover:text-primary transition-colors"><Instagram className="h-5 w-5" /></a>
               <a href="#" className="hover:text-primary transition-colors"><Twitter className="h-5 w-5" /></a>
             </div>
+            <button 
+              onClick={() => setIsEnquiryOpen(true)}
+              className="mt-4 px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg shadow transition-colors duration-200"
+            >
+              Send Bulk Enquiry
+            </button>
           </div>
 
           {/* Quick Links */}
@@ -68,8 +77,12 @@ export default function Footer() {
 
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-white/50">
           <p>&copy; {new Date().getFullYear()} Green Weave. All rights reserved.</p>
-          <p className="mt-4 md:mt-0">Designed for Earthy Luxury</p>
+          <p className="mt-4 md:mt-0">
+            Designed for Earthy Luxury | Developed By <span className="text-white font-semibold">DN Groups</span>
+          </p>
         </div>
+        
+        <EnquiryModal isOpen={isEnquiryOpen} onClose={() => setIsEnquiryOpen(false)} />
       </div>
     </footer>
   );
